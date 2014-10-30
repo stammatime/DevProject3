@@ -1,5 +1,9 @@
 import Orange
 import random
+import numpy as np
+from scipy import cluster
+from matplotlib import pyplot
+
 #from matplotlib import pyplot as plt
 
 def main():
@@ -27,6 +31,20 @@ def main():
   #matrix = Orange.distance.distance_matrix(data_input)
   #print matrix[0,1]
 
+  # Hierarchical clustering (average linkage)
+  sim_matrix = Orange.misc.SymMatrix(len(data_input))
+  sim_matrix = Orange.distance.distance_matrix(data_input, Orange.distance.Euclidean)
+  hier = Orange.clustering.hierarchical.HierarchicalClustering()
+  hier.linkage = Orange.clustering.hierarchical.AVERAGE
+  root = hier(sim_matrix)
+  root.mapping.objects = data_input
+
+  # Make the dendrogram.  Not sure if we need all of the lines below or what,
+  # BUT IT WORKS!!!!
+  sample = data_input.select(Orange.data.sample.SubsetIndices2(data_input, 40), 0)
+  root = Orange.clustering.hierarchical.clustering(sample)
+  labels = [str(d.get_class()) for d in sample]
+  Orange.clustering.hierarchical.dendrogram_draw("hclust-dendrogram.svg", root, labels=labels)
 
 
 main()
