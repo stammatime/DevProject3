@@ -1,38 +1,27 @@
 import Orange
 import random
-import orngClustering
-import pylab
-import random
-import numpy as np
-from scipy import cluster
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
+from pylab import plot,show
+from numpy import vstack,array
+from numpy.random import rand
 from scipy.cluster.vq import vq, kmeans, whiten
-
+# What is the point of these below? 
 import math
 import sys
+import orngClustering
 from Orange import statc
 #from matplotlib import pyplot as plt
+
 
 def main():
     
   # Determine what value we should put in random.seed
   random.seed(42)
-  data_input = Orange.data.Table("out.arff")  
-
-
-
-  #MxN array is an observable vector. columns are the features seen during each observation
-  #scipy.cluster.vq.kmeans(obs, k_or_guess, iter=20, thresh=1.0000000000000001e-05)
-  #class Orange.clustering.kmeans.Clustering(data=None, centroids=3, maxiters=None, minscorechange=None, stopchanges=0, nstart=1, initialization=init_random, distance=Orange.distance.Euclidean, scoring=score_distance_to_centroids, inner_callback=None, outer_callback=None)
+  data_input = Orange.data.Table("out.arff")
 
   # Running kmeans algorithm here, need to determine what should go in # field
-  km = Orange.clustering.kmeans.Clustering(data_input, 5, 0 , callback)
+  km = Orange.clustering.kmeans.Clustering(data_input, 3)
   print km.clusters[-1000:]
-  #not sure why -10, callback not working?
-
-  # Trying to figure out how to make a pretty plot but there's some library issues
-  #Orange.clustering.kmeans.plot_silhouette(km, "kmeans-silhouette.svg")
-  #print km.clusters
 
   # Calculate Euclidean Distance
   measure = Orange.distance.Euclidean(data_input)
@@ -43,8 +32,27 @@ def main():
   print poop(data_input[0], data_input[1])
 
   # Transform to a distance matrix
-  #matrix = Orange.distance.distance_matrix(data_input)
+  matrix = Orange.distance.distance_matrix(data_input)
   #print matrix[0,1]
+
+
+
+  # Data Generation (rand(150,2) + array([.5,.5]),rand(150,2))
+  dat = vstack(matrix)
+
+  # Computing k means with K = 3
+  centroids,_ = kmeans(dat, 3)
+  # Assign each sample to a cluster
+  idx,_ = vq(dat, centroids)
+
+  # Some plotting using numpy's logical indexing
+  plot(dat[idx==0,0],dat[idx==0,1], 'ob',
+       dat[idx==1,0],dat[idx==1,1], 'or',
+       dat[idx==2,0],dat[idx==2,1], 'og')
+  plot(centroids[:,0],centroids[:,1], 'sg', markersize=8)
+  show()
+  # Need to close the figure window after it closes
+
 
   # Hierarchical clustering (average linkage)
   sim_matrix = Orange.misc.SymMatrix(len(data_input))
@@ -61,9 +69,9 @@ def main():
   labels = [str(d.get_class()) for d in sample]
   Orange.clustering.hierarchical.dendrogram_draw("hclust-dendrogram.svg", root, labels=labels)
 
-
-def callback(km):
-    print "Iteration: %d, changes: %d, score: %.4f" % (km.iteration, km.nchanges, km.score)
+  
+#def callback(km):
+ #   print "Iteration: %d, changes: %d, score: %8.6f" % (km.iteration, km.nchanges, km.score)
 
 main()
 
